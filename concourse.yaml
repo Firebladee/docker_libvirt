@@ -1,0 +1,89 @@
+---
+groups:
+  - name: master
+    jobs:
+      - hadolint
+      - validate_and_lint_scripts
+      - cst
+      - testinfra
+
+resources:
+  - name: main_git_repo
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/Firebladee/docker_libvirt.git
+
+jobs:
+  - name: hadolint
+    public: true
+    plan:
+      - get: main_git_repo
+        trigger: true
+      - task: validate
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: hadolint/hadolint
+          inputs:
+            - name: main_git_repo
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                hadolint main_git_repo/systemd/Dockerfile
+
+  - name: validate_and_lint_scripts
+    public: true
+    plan:
+      - get: main_git_repo
+        trigger: true
+      - task: hello
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: centos
+          run:
+            path: echo
+            args: ["Validate and lint scripts"]
+
+  - name: cst
+    public: true
+    plan:
+      - get: main_git_repo
+        passed:
+          - hadolint
+      - task: hello
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: centos
+          run:
+            path: echo
+            args: ["Cst"]
+
+  - name: testinfra
+    public: true
+    plan:
+      - get: main_git_repo
+        passed:
+          - cst
+          - validate_and_lint_scripts
+      - task: hello
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: centos
+          run:
+            path: echo
+            args: ["Testinfra"]
+
