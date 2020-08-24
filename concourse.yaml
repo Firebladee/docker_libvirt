@@ -3,9 +3,10 @@ groups:
   - name: master
     jobs:
       - hadolint
+      - rubocop
+      - rspec
       - shellcheck
       - build
-      - cst
       - testinfra
 
 resources:
@@ -45,6 +46,53 @@ jobs:
             args:
               - resource_git/systemd/Dockerfile
 
+  - name: rubocop
+    public: true
+    plan:
+      - get: resource_git
+        trigger: true
+      - task: rubocop
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ruby
+          inputs:
+            - name: resource_git
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                gem install rubocop
+                cd resource_git
+                rubocop
+
+  - name: rspec
+    public: true
+    plan:
+      - get: resource_git
+        trigger: true
+        passed:
+          - rubocop
+      - task: rspec
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ruby
+          inputs:
+            - name: resource_git
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                bundle
+                rspec
+        
   - name: shellcheck
     public: true
     plan:
@@ -77,40 +125,14 @@ jobs:
         params:
           build: resource_git/systemd
 
-  - name: cst
-    public: true
-    plan:
-      - get: resource_git
-        passed:
-          - hadolint
-          - build
-        trigger: true
-      - task: cst
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: centos
-          inputs:
-            - name: resource_git
-          run:
-            path: sh
-            args:
-              - -exc
-              - |
-                curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64 && chmod +x container-structure-test-linux-amd64 && mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
-                ls
-                ls resource_git
-                container-structure-test test --image fireblade/testing --config resource_git/cst.yaml
-
   - name: testinfra
     public: true
     plan:
       - get: resource_git
         passed:
-          - cst
           - shellcheck
+          - build
+          - rspec
         trigger: true
       - task: hello
         config:
@@ -122,4 +144,3 @@ jobs:
           run:
             path: echo
             args: ["Testinfra"]
-
