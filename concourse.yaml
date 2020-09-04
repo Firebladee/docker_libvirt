@@ -6,8 +6,9 @@ groups:
       - rubocop
       - rspec
       - shellcheck
-      - build
+      - build_test
       - testinfra
+      - docker_build
 
 resources:
   - name: resource_git
@@ -26,6 +27,14 @@ resources:
       password: ((docker_hub_password))
       repository: ((docker_hub_username))/testing
 
+  - name: docker_build
+    type: docker-image
+    icon: docker
+    source:
+      repository: ((docker_hub_username))/docker_libvirt
+      username: ((docker_hub_username))
+      password: ((docker_hub_password))
+
 jobs:
   - name: hadolint
     public: true
@@ -39,12 +48,15 @@ jobs:
             type: registry-image
             source:
               repository: hadolint/hadolint
+              tag: latest-debian
           inputs:
             - name: resource_git
           run:
-            path: hadolint
+            path: sh
             args:
-              - resource_git/systemd/Dockerfile
+              - -exc
+              - |
+                hadolint resource_git/systemd/Dockerfile
 
   - name: rubocop
     public: true
@@ -65,8 +77,8 @@ jobs:
             args:
               - -exc
               - |
-                gem install rubocop
                 cd resource_git
+                gem install rubocop
                 rubocop
 
   - name: rspec
@@ -77,12 +89,13 @@ jobs:
         passed:
           - rubocop
       - task: rspec
+        privileged: true
         config:
           platform: linux
           image_resource:
             type: registry-image
             source:
-              repository: ruby
+              repository: fireblade/docker_rspec
           inputs:
             - name: resource_git
           run:
@@ -90,8 +103,10 @@ jobs:
             args:
               - -exc
               - |
-                bundle
-                rspec
+                source /docker-lib.sh
+                start_docker
+                cd resource_git
+                rake
         
   - name: shellcheck
     public: true
@@ -114,7 +129,7 @@ jobs:
               - |
                 shellcheck resource_git/systemd/*.sh
 
-  - name: build
+  - name: build_test
     public: true
     plan:
       - get: resource_git
@@ -123,7 +138,7 @@ jobs:
         trigger: true
       - put: docker_temp
         params:
-          build: resource_git/systemd
+          build: resource_git/
 
   - name: testinfra
     public: true
@@ -131,16 +146,29 @@ jobs:
       - get: resource_git
         passed:
           - shellcheck
-          - build
+          - build_test
           - rspec
         trigger: true
       - task: hello
         config:
           platform: linux
           image_resource:
-            type: registry-image
+            type: docker-image
             source:
-              repository: centos
+              repository: ((docker_hub_username))/testing
+              username: ((docker_hub_username))
+              password: ((docker_hub_password))
           run:
             path: echo
             args: ["Testinfra"]
+
+  - name: docker_build
+    public: true
+    plan:
+      - get: resource_git
+        passed:
+          - testinfra
+        trigger: true
+      - put: docker_build
+        params:
+          build: resource_git
