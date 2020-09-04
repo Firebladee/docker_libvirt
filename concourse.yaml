@@ -56,7 +56,7 @@ jobs:
             args:
               - -exc
               - |
-                hadolint resource_git/systemd/Dockerfile
+                hadolint resource_git/Dockerfile
 
   - name: rubocop
     public: true
@@ -127,7 +127,7 @@ jobs:
             args:
               - -exc
               - |
-                shellcheck resource_git/systemd/*.sh
+                shellcheck resource_git/*.sh
 
   - name: build_test
     public: true
