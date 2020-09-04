@@ -35,11 +35,20 @@ resources:
       username: ((docker_hub_username))
       password: ((docker_hub_password))
 
+  - name: external_docker
+    type: registry-image
+    icon: docker
+    source:
+      repository: centos
+      tag: 7
+
 jobs:
   - name: hadolint
     public: true
     plan:
       - get: resource_git
+        trigger: true
+      - get: external_docker
         trigger: true
       - task: validate
         config:
@@ -62,6 +71,8 @@ jobs:
     public: true
     plan:
       - get: resource_git
+        trigger: true
+      - get: external_docker
         trigger: true
       - task: rubocop
         config:
