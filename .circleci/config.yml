@@ -26,7 +26,7 @@ orbs:
         - docker/hadolint:
             dockerfiles: Dockerfile
 
-jobs:
+#jobs:
 #  rubocop:
 #    steps:
 #      - rubocop/rubocop:
