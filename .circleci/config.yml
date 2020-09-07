@@ -34,7 +34,7 @@ workflows:
             - rubocop
             - hadolint
           image: $CIRCLE_PROJECT_USERNAME/testing
-          use-docker-credentails-store: true
+          use-docker-credentials-store: true
 
   #rspec2:
   #  jobs:
@@ -44,5 +44,5 @@ workflows:
     jobs:
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/libvirt
-          use-docker-credentails-store: true
+          use-docker-credentials-store: true
 
