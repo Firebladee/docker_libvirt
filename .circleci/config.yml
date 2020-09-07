@@ -1,17 +1,25 @@
 version: 2.1
+
+workflows:
+  lint:
+    jobs:
+      - rubocop
+      - hadolint
+      - shellcheck
+
 orbs:
   rubocop: hanachin/rubocop@0.0.6
   docker: circleci/docker@1.4.0
   shellcheck: circleci/shellcheck@2.0.0
-workflows:
+jobs:
   rubocop:
     jobs:
       - rubocop/rubocop:
           options:
             --parallel
 
-  #hadolint:
-  #  jobs:
+  hadolint:
+    jobs:
       - docker/hadolint:
           dockerfiles: Dockerfile
 
@@ -19,20 +27,14 @@ workflows:
   #  jobs:
   #    - rspec
 
-  #shellcheck:
-  #  jobs:
-      - shellcheck/check:
-          requires:
-            - rubocop
-            - hadolint
+  shellcheck:
+    jobs:
+      - shellcheck/check
           dir: .
 
-  #build_test:
-  #  jobs:
+  build_test:
+    jobs:
       - docker/publish:
-          requires:
-            - rubocop
-            - hadolint
           image: $CIRCLE_PROJECT_USERNAME/testing
           use-docker-credentials-store: true
 
@@ -40,8 +42,8 @@ workflows:
   #  jobs:
   #    - testinfra
 
-  #docker_build:
-  #  jobs:
+  docker_build:
+    jobs:
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/libvirt
           use-docker-credentials-store: true
