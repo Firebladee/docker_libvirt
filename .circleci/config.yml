@@ -1,9 +1,9 @@
 version: 2.1
 
-workflows:
-  lint:
-    jobs:
-      - rubocop
+#workflows:
+#  lint:
+#    jobs:
+#      - rubocop
 #      - hadolint
 #      - shellcheck
 
@@ -19,6 +19,12 @@ orbs:
         - rubocop/rubocop:
             options:
               --parallel
+
+workflows:
+  lint:
+    jobs:
+      - rubocop
+
 
 #    hadolint:
 #      executor: docker/machine
