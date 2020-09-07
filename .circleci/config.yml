@@ -6,7 +6,8 @@ workflows:
   rubocop:
     jobs:
       - rubocop/rubocop:
-        options: --parallel
+        options:
+          --parallel
 
   hadolint:
     jobs:
