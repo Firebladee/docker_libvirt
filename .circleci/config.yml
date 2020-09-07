@@ -33,7 +33,7 @@ jobs:
           dir: .
 
   build_test:
-    jobs:
+    steps:
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/testing
           use-docker-credentials-store: true
@@ -43,7 +43,7 @@ jobs:
   #    - testinfra
 
   docker_build:
-    jobs:
+    steps:
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/libvirt
           use-docker-credentials-store: true
