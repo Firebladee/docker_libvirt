@@ -18,6 +18,7 @@ jobs:
   hadolint:
     executor: docker/machine
     steps:
+      - checkout
       - docker/hadolint:
           dockerfiles: Dockerfile
 
