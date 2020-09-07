@@ -26,7 +26,7 @@ workflows:
 
   build_test:
     jobs:
-      - docker/publish
+      - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/testing
 
   #rspec2:
@@ -35,5 +35,5 @@ workflows:
 
   docker_build:
     jobs:
-      - docker/publish
+      - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/libvirt
