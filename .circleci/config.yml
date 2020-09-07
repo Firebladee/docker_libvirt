@@ -9,4 +9,4 @@ workflows:
   hadolint:
     jobs:
       - docker/hadolint
-          dockerfile: .
+          dockerfiles: .
