@@ -13,13 +13,13 @@ orbs:
   shellcheck: circleci/shellcheck@2.0.0
 jobs:
   rubocop:
-    jobs:
+    steps:
       - rubocop/rubocop:
           options:
             --parallel
 
   hadolint:
-    jobs:
+    steps:
       - docker/hadolint:
           dockerfiles: Dockerfile
 
@@ -28,7 +28,7 @@ jobs:
   #    - rspec
 
   shellcheck:
-    jobs:
+    steps:
       - shellcheck/check:
           dir: .
 
