@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   rubocop: hanachin/rubocop@0.0.6
-  docker: circleci/docker@
+  docker: circleci/docker@1.4.0
 workflows:
   rubocop:
     jobs:
