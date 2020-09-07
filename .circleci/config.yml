@@ -2,6 +2,7 @@ version: 2.1
 orbs:
   rubocop: hanachin/rubocop@0.0.6
   docker: circleci/docker@1.4.0
+  shellcheck: circleci/shellcheck@2.0.0
 workflows:
   rubocop:
     jobs:
@@ -13,3 +14,26 @@ workflows:
     jobs:
       - docker/hadolint:
           dockerfiles: Dockerfile
+
+  #rspec:
+  #  jobs:
+  #    - rspec
+
+  shellcheck:
+    jobs:
+      - shellcheck/check:
+          dir: .
+
+  build_test:
+    jobs:
+      - docker/publish
+          image: $CIRCLE_PROJECT_USERNAME/testing
+
+  #rspec2:
+  #  jobs:
+  #    - testinfra
+
+  docker_build:
+    jobs:
+      - docker/publish
+          image: $CIRCLE_PROJECT_USERNAME/libvirt
