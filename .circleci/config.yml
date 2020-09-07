@@ -29,9 +29,6 @@ workflows:
 
   build_test:
     jobs:
-      - requires:
-          - rubocop
-          - hadolint
       - docker/publish:
           requires:
             - rubocop
