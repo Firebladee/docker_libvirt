@@ -8,5 +8,5 @@ workflows:
       - rubocop/rubocop
   hadolint:
     jobs:
-      - docker/hadolint
+      - docker/hadolint:
           dockerfiles: .
