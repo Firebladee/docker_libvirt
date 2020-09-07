@@ -5,7 +5,9 @@ orbs:
 workflows:
   rubocop:
     jobs:
-      - rubocop/rubocop
+      - rubocop/rubocop:
+        options: --parallel
+
   hadolint:
     jobs:
       - docker/hadolint:
