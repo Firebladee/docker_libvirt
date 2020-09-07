@@ -21,13 +21,20 @@ workflows:
 
   shellcheck:
     jobs:
+      - requires:
+          - rubocop
+          - hadolint
       - shellcheck/check:
           dir: .
 
   build_test:
     jobs:
+      - requires:
+          - rubocop
+          - hadolint
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/testing
+          use-docker-credentails-store: true
 
   #rspec2:
   #  jobs:
@@ -37,3 +44,5 @@ workflows:
     jobs:
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/libvirt
+          use-docker-credentails-store: true
+
