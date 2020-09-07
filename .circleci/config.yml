@@ -20,11 +20,11 @@ orbs:
 #            options:
 #              --parallel
 
-    hadolint:
-      executor: docker/machine
-      steps:
-        - docker/hadolint:
-            dockerfiles: Dockerfile
+#    hadolint:
+#      executor: docker/machine
+#      steps:
+#        - docker/hadolint:
+#            dockerfiles: Dockerfile
 
 jobs:
   rubocop:
