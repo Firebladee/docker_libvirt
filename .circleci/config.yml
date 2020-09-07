@@ -9,8 +9,8 @@ workflows:
   testing:
     jobs:
       #- rspec
-      - build_test
-          require:
+      - build_test:
+          requires:
             - rubocop
             - hadolint
   live_testing:
