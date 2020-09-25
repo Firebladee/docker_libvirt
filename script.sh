@@ -1,10 +1,6 @@
 #!/bin/bash
 
 printf "\nInstall libvirt\n"
-printf "This will take a while\n"
-yum -y -q install deltarpm
-yum -y -q update
-yum -y -q install qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
 
 printf "\nStart libvirtd\n"
 systemctl enable libvirtd
