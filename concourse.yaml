@@ -1,0 +1,184 @@
+---
+groups:
+  - name: master
+    jobs:
+      - hadolint
+      - rubocop
+      - rspec
+      - shellcheck
+      - build_test
+      - testinfra
+      - docker_build
+
+resources:
+  - name: resource_git
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/Firebladee/docker_libvirt.git
+
+  - name: docker_temp
+    type: docker-image
+    icon: docker
+    source:
+      email: ((docker_hub_email))
+      username: ((docker_hub_username))
+      password: ((docker_hub_password))
+      repository: ((docker_hub_username))/testing
+
+  - name: docker_build
+    type: docker-image
+    icon: docker
+    source:
+      repository: ((docker_hub_username))/libvirt
+      username: ((docker_hub_username))
+      password: ((docker_hub_password))
+
+  - name: external_docker
+    type: registry-image
+    icon: docker
+    source:
+      repository: centos
+      tag: 7
+
+jobs:
+  - name: hadolint
+    public: true
+    plan:
+      - get: resource_git
+        trigger: true
+      - get: external_docker
+        trigger: true
+      - task: validate
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: hadolint/hadolint
+              tag: latest-debian
+          inputs:
+            - name: resource_git
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                hadolint resource_git/Dockerfile
+
+  - name: rubocop
+    public: true
+    plan:
+      - get: resource_git
+        trigger: true
+      - get: external_docker
+        trigger: true
+      - task: rubocop
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ruby
+          inputs:
+            - name: resource_git
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                cd resource_git
+                gem install rubocop
+                rubocop
+
+  - name: rspec
+    public: true
+    plan:
+      - get: resource_git
+        trigger: true
+        passed:
+          - rubocop
+      - task: rspec
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: fireblade/docker_rspec
+          inputs:
+            - name: resource_git
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                source /docker-lib.sh
+                start_docker
+                cd resource_git
+                rake
+        
+  - name: shellcheck
+    public: true
+    plan:
+      - get: resource_git
+        trigger: true
+      - task: shellcheck
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: koalaman/shellcheck-alpine
+          inputs:
+            - name: resource_git
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                shellcheck resource_git/*.sh
+
+  - name: build_test
+    public: true
+    plan:
+      - get: resource_git
+        passed:
+          - hadolint
+        trigger: true
+      - put: docker_temp
+        params:
+          build: resource_git/
+
+  - name: testinfra
+    public: true
+    plan:
+      - get: resource_git
+        passed:
+          - shellcheck
+          - build_test
+          - rspec
+        trigger: true
+      - task: hello
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: ((docker_hub_username))/testing
+              username: ((docker_hub_username))
+              password: ((docker_hub_password))
+          run:
+            path: echo
+            args: ["Testinfra"]
+
+  - name: docker_build
+    public: true
+    plan:
+      - get: resource_git
+        passed:
+          - testinfra
+        trigger: true
+      - put: docker_build
+        params:
+          build: resource_git
