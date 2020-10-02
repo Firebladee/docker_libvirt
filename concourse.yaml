@@ -16,7 +16,6 @@ resources:
     icon: github
     source:
       uri: https://github.com/Firebladee/docker_libvirt.git
-      branch: concourse
 
   - name: docker_temp
     type: docker-image
