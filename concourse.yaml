@@ -6,48 +6,76 @@ groups:
       - rubocop
       - rspec
       - shellcheck
-      - build_test
+      - build-test
       - testinfra
-      - docker_build
+      - docker-build
+      - major
+      - minor
+      - patch
+
+  - name: ((branch))
+    jobs:
+      - hadolint-dev
+      - rubocop-dev
+      - rspec-dev
+      - build-test-dev
+      - testinfra-dev
 
 resources:
-  - name: resource_git
+  - name: resource-git
     type: git
     icon: github
     source:
       uri: https://github.com/Firebladee/docker_libvirt.git
+      branch: master
 
-  - name: docker_temp
+  - name: resource-git-dev
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/Firebladee/docker_libvirt.git
+      branch: ((branch))
+
+  - name: docker-temp
     type: docker-image
     icon: docker
     source:
-      email: ((docker_hub_email))
-      username: ((docker_hub_username))
-      password: ((docker_hub_password))
-      repository: ((docker_hub_username))/testing
+      repository: ((nexus_ip)):((nexus_docker_port))/testing
+      username: ((nexus_username))
+      password: ((nexus_password))
+      insecure_registries:
+        - http://((nexus_ip)):((nexus_docker_port))
 
-  - name: docker_build
+  - name: docker-build
     type: docker-image
     icon: docker
     source:
-      repository: ((docker_hub_username))/libvirt
-      username: ((docker_hub_username))
-      password: ((docker_hub_password))
+      repository: ((nexus_ip)):((nexus_docker_port))/fireblade/libvirt
+      username: ((nexus_username))
+      password: ((nexus_password))
+      insecure_registries:
+        - http://((nexus_ip)):((nexus_docker_port))
 
-  - name: external_docker
+  - name: docker-libvirt
     type: registry-image
     icon: docker
     source:
-      repository: centos
-      tag: 7
+      repository: ((nexus_ip)):((nexus_docker_group_port))/fireblade/libvirt
+
+  - name: version
+    type: semver
+    source:
+      driver: git
+      uri: git@github.com:Firebladee/docker-libvirt.git
+      branch: version
+      file: version
+      initial_version: 0.0.1
 
 jobs:
   - name: hadolint
     public: true
     plan:
-      - get: resource_git
-        trigger: true
-      - get: external_docker
+      - get: resource-git
         trigger: true
       - task: validate
         config:
@@ -55,23 +83,21 @@ jobs:
           image_resource:
             type: registry-image
             source:
-              repository: hadolint/hadolint
+              repository: ((nexus_ip)):((nexus_docker_group_port))/hadolint/hadolint
               tag: latest-debian
           inputs:
-            - name: resource_git
+            - name: resource-git
           run:
             path: sh
             args:
               - -exc
               - |
-                hadolint resource_git/Dockerfile
+                hadolint resource-git/Dockerfile
 
   - name: rubocop
     public: true
     plan:
-      - get: resource_git
-        trigger: true
-      - get: external_docker
+      - get: resource-git
         trigger: true
       - task: rubocop
         config:
@@ -79,22 +105,22 @@ jobs:
           image_resource:
             type: registry-image
             source:
-              repository: ruby
+              repository: ((nexus_ip)):((nexus_docker_group_port))/ruby
           inputs:
-            - name: resource_git
+            - name: resource-git
           run:
             path: sh
             args:
               - -exc
               - |
-                cd resource_git
+                cd resource-git
                 gem install rubocop
                 rubocop
 
   - name: rspec
     public: true
     plan:
-      - get: resource_git
+      - get: resource-git
         trigger: true
         passed:
           - rubocop
@@ -105,9 +131,9 @@ jobs:
           image_resource:
             type: registry-image
             source:
-              repository: fireblade/docker_rspec
+              repository: ((nexus_ip)):((nexus_docker_group_port))/fireblade/docker_rspec
           inputs:
-            - name: resource_git
+            - name: resource-git
           run:
             path: sh
             args:
@@ -115,13 +141,13 @@ jobs:
               - |
                 source /docker-lib.sh
                 start_docker
-                cd resource_git
+                cd resource-git
                 rake
         
   - name: shellcheck
     public: true
     plan:
-      - get: resource_git
+      - get: resource-git
         trigger: true
       - task: shellcheck
         config:
@@ -129,34 +155,34 @@ jobs:
           image_resource:
             type: registry-image
             source:
-              repository: koalaman/shellcheck-alpine
+              repository: ((nexus_ip)):((nexus_docker_group_port))/koalaman/shellcheck-alpine
           inputs:
-            - name: resource_git
+            - name: resource-git
           run:
             path: sh
             args:
               - -exc
               - |
-                shellcheck resource_git/*.sh
+                shellcheck resource-git/*.sh
 
-  - name: build_test
+  - name: build-test
     public: true
     plan:
-      - get: resource_git
+      - get: resource-git
         passed:
           - hadolint
         trigger: true
-      - put: docker_temp
+      - put: docker-temp
         params:
-          build: resource_git/
+          build: resource-git/
 
   - name: testinfra
     public: true
     plan:
-      - get: resource_git
+      - get: resource-git
         passed:
           - shellcheck
-          - build_test
+          - build-test
           - rspec
         trigger: true
       - task: hello
@@ -165,20 +191,148 @@ jobs:
           image_resource:
             type: docker-image
             source:
-              repository: ((docker_hub_username))/testing
-              username: ((docker_hub_username))
-              password: ((docker_hub_password))
+              repository: ((nexus_ip)):((nexus_docker_group_port))/testing
           run:
             path: echo
             args: ["Testinfra"]
 
-  - name: docker_build
+  - name: docker-build
     public: true
     plan:
-      - get: resource_git
+      - get: resource-git
         passed:
           - testinfra
         trigger: true
-      - put: docker_build
+      - put: docker-build
         params:
-          build: resource_git
+          build: resource-git
+      - put: version
+        params:
+          bump: patch
+
+  - name: hadolint-dev
+    public: true
+    plan:
+      - get: resource-git-dev
+        trigger: true
+      - get: docker-libvirt
+        trigger: true
+      - task: validate
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ((nexus_ip)):((nexus_docker_group_port))/hadolint/hadolint
+              tag: latest-debian
+          inputs:
+            - name: resource-git-dev
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                hadolint --config resource-git-dev/.hadolint.yaml resource-git-dev/Dockerfile
+
+  - name: rubocop-dev
+    public: true
+    plan:
+      - get: resource-git-dev
+        trigger: true
+      - get: docker-libvirt
+        trigger: true
+      - task: rubocop
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ((nexus_ip)):((nexus_docker_group_port))/ruby
+          inputs:
+            - name: resource-git-dev
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                cd resource-git-dev
+                gem install rubocop
+                rubocop
+
+  - name: rspec-dev
+    public: true
+    plan:
+      - get: resource-git-dev
+        trigger: true
+        passed:
+          - rubocop-dev
+      - task: rspec
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ((nexus_ip)):((nexus_docker_group_port))/fireblade/rspec
+          inputs:
+            - name: resource-git-dev
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                source /docker-lib.sh
+                start_docker
+                cd resource-git-dev
+                rake
+
+  - name: build-test-dev
+    public: true
+    plan:
+      - get: resource-git-dev
+        passed:
+          - hadolint-dev
+        trigger: true
+      - put: docker-temp
+        params:
+          build: resource-git-dev/
+
+  - name: testinfra-dev
+    public: true
+    plan:
+      - get: resource-git-dev
+        passed:
+          - build-test-dev
+          - rspec-dev
+        trigger: true
+      - task: hello
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: ((nexus_ip)):((nexus_docker_group_port))/testing
+          run:
+            path: echo
+            args: ["Testinfra"]
+
+  - name: major
+    public: true
+    plan:
+      - put: version
+        params:
+          bump: major
+
+  - name: minor
+    public: true
+    plan:
+      - put: version
+        params:
+          bump: minor
+
+  - name: patch
+    public: true
+    plan:
+      - put: version
+        params:
+          bump: patch
