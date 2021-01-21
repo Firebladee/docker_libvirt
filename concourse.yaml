@@ -56,6 +56,14 @@ resources:
       insecure_registries:
         - http://((nexus_ip)):((nexus_docker_port))
 
+  - name: docker-hub
+    type: docker-image
+    icon: docker
+    source:
+      repository: fireblade/rspec
+      username: ((docker_hub_username))
+      password: ((docker_hub_password))
+
   - name: docker-libvirt
     type: registry-image
     icon: docker
@@ -70,6 +78,7 @@ resources:
       branch: version
       file: version
       initial_version: 0.0.1
+      private_key: ((private_key))
 
 jobs:
   - name: hadolint
@@ -203,12 +212,22 @@ jobs:
         passed:
           - testinfra
         trigger: true
+      - get: version
+        params:
+          bump: patch
       - put: docker-build
         params:
           build: resource-git
+          tag_file: version/version
+          tag_as_latest: true
+      - put: docker-hub
+        params:
+          build: resource-git
+          tag_file: version/version
+          tag_as_latest: true
       - put: version
         params:
-          bump: patch
+          file: version/version
 
   - name: hadolint-dev
     public: true
