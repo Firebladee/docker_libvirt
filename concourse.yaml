@@ -140,7 +140,7 @@ jobs:
           image_resource:
             type: registry-image
             source:
-              repository: ((nexus_ip)):((nexus_docker_group_port))/fireblade/docker_rspec
+              repository: ((nexus_ip)):((nexus_docker_group_port))/fireblade/rspec
           inputs:
             - name: resource-git
           run:
@@ -200,7 +200,9 @@ jobs:
           image_resource:
             type: docker-image
             source:
-              repository: ((nexus_ip)):((nexus_docker_group_port))/testing
+              repository: ((nexus_ip)):((nexus_docker_port))/testing
+              insecure_registries:
+                - http://((nexus_ip)):((nexus_docker_port))
           run:
             path: echo
             args: ["Testinfra"]
