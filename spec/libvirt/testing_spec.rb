@@ -9,7 +9,7 @@ describe 'Dockerfile' do
   set :backend, :docker
   set :docker_image, image.id
 
-  describe package('systemd') do
-    it { should be_installed }
-  end
+  # describe package('systemd') do
+  #   it { should be_installed }
+  # end
 end
