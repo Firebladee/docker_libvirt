@@ -1,5 +1,5 @@
 ARG from=centos:7
-
+# hadolint ignore=DL3006
 FROM $from
 ENV container docker
 # hadolint ignore=DL3033
