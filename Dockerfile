@@ -1,4 +1,4 @@
-ARG from=centos:7
+ARG from
 # hadolint ignore=DL3006
 FROM $from
 ENV container docker
