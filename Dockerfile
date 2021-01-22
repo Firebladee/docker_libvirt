@@ -1,4 +1,6 @@
-FROM centos:7
+ARG from=centos:7
+
+FROM $from
 ENV container docker
 # hadolint ignore=DL3033
 RUN yum -y install deltarpm; yum clean all

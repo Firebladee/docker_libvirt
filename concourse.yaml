@@ -184,6 +184,8 @@ jobs:
       - put: docker-temp
         params:
           build: resource-git/
+          build_args:
+            from: ((nexus_ip)):((nexus_docker_group_port))/centos:7
 
   - name: testinfra
     public: true
