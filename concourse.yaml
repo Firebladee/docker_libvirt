@@ -74,7 +74,7 @@ resources:
     type: semver
     source:
       driver: git
-      uri: git@github.com:Firebladee/docker-libvirt.git
+      uri: git@github.com:Firebladee/docker_libvirt.git
       branch: version
       file: version
       initial_version: 0.0.1
