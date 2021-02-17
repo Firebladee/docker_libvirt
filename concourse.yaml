@@ -65,10 +65,12 @@ resources:
       password: ((docker_hub_password))
 
   - name: docker-libvirt
-    type: registry-image
+    type: docker-image
     icon: docker
     source:
       repository: ((nexus_ip)):((nexus_docker_group_port))/fireblade/libvirt
+      insecure_registries:
+        - http://((nexus_ip)):((nexus_docker_group_port))
 
   - name: version
     type: semver
@@ -184,6 +186,8 @@ jobs:
       - put: docker-temp
         params:
           build: resource-git/
+          build_args:
+            from: ((nexus_ip)):((nexus_docker_group_port))/centos:7
 
   - name: testinfra
     public: true
