@@ -45,6 +45,7 @@ resources:
       password: ((nexus_password))
       insecure_registries:
         - http://((nexus_ip)):((nexus_docker_port))
+        - http://((nexus_ip)):((nexus_docker_group_port))
 
   - name: docker-build
     type: docker-image
@@ -55,6 +56,7 @@ resources:
       password: ((nexus_password))
       insecure_registries:
         - http://((nexus_ip)):((nexus_docker_port))
+        - http://((nexus_ip)):((nexus_docker_group_port))
 
   - name: docker-hub
     type: docker-image
@@ -183,36 +185,11 @@ jobs:
         passed:
           - hadolint
         trigger: true
-      #- put: docker-temp
-      #  params:
-      #    build: resource-git
-      #    build_args:
-      #      from: ((nexus_ip)):((nexus_docker_group_port))/centos:7
-
-      - task: docker-temp-build
-        privileged: true
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: ((nexus_ip)):((nexus_docker_group_port))/amidos/dcind
-              insecure_registries:
-                - http://((nexus_ip)):((nexus_docker_group_port))
-          inputs:
-            - name: resource-git
-          run:
-            path: sh
-            args:
-              - -exc
-              - |
-                source /docker-lib.sh
-                start_docker ((nexus_ip)):((nexus_docker_port))
-
-                cd resource-git
-                docker build --build-arg from="((nexus_ip)):((nexus_docker_group_port))/library/centos:7" -t ((nexus_ip)):((nexus_docker_port))/testing .
-                docker push ((nexus_ip)):((nexus_docker_port))/testing
-                exit
+      - put: docker-temp
+        params:
+          build: resource-git
+          build_args:
+            from: ((nexus_ip)):((nexus_docker_group_port))/library/centos:7
 
   - name: testinfra
     public: true
@@ -249,11 +226,15 @@ jobs:
       - put: docker-build
         params:
           build: resource-git
+          build_args:
+            from: ((nexus_ip)):((nexus_docker_group_port))/library/centos:7
           tag_file: version/version
           tag_as_latest: true
       - put: docker-hub
         params:
           build: resource-git
+          build_args:
+            from: ((nexus_ip)):((nexus_docker_group_port))/library/centos:7
           tag_file: version/version
           tag_as_latest: true
       - put: version
@@ -345,7 +326,9 @@ jobs:
         trigger: true
       - put: docker-temp
         params:
-          build: resource-git-dev/
+          build: resource-git-dev
+          build_args:
+            from: ((nexus_ip)):((nexus_docker_group_port))/library/centos:7
 
   - name: testinfra-dev
     public: true
