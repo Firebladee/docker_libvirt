@@ -1,3 +1,4 @@
+---
 name: Pull
 
 on:
@@ -23,9 +24,10 @@ jobs:
         uses: ibiqlik/action-yamllint@v3
 
   hadolint:
-    stage: linting
-    image: registry.gitlab.com/pipeline-components/hadolint:latest
-    script:
-      - hadolint Dockerfile
-
-
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and scan image
+        uses: ISID/build-and-scan-image@main
+        with:
+          tag: "libvirt"
+          path: "."
