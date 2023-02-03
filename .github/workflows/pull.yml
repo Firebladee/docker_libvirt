@@ -1,0 +1,32 @@
+---
+name: Pull
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*.*.*
+  pull_request:
+    branches:
+      - master
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: yamllint
+        uses: ibiqlik/action-yamllint@v3
+
+  hadolint:
+  stage: linting
+  image: registry.gitlab.com/pipeline-components/hadolint:latest
+  script:
+    - hadolint Dockerfile
+
+
