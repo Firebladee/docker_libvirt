@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 groups:
   - name: master
     jobs:
@@ -156,7 +157,7 @@ jobs:
                 start_docker
                 cd resource-git
                 # rake
-        
+
   - name: shellcheck
     public: true
     plan:
